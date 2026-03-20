@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Transformer</title>
+  <meta name="theme-color" content="#0b0f19">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <!-- Decorative background elements -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="container">
+    <div class="glass-card">
+      <div class="header">
+        <h1>Password Transformer</h1>
+        <p>Transposición segura y 100% local</p>
+      </div>
+
+      <form id="transform-form">
+        <div class="form-group">
+          <label for="password">Contraseña Original</label>
+          <input type="password" id="password" placeholder="Ingresa tu contraseña base..." required autocomplete="off">
+          <button type="button" class="toggle-visibility" id="toggle-pwd" tabindex="-1" title="Mostrar/Ocultar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label for="seed">Frase Semilla (Clave)</label>
+          <input type="password" id="seed" placeholder="Ingresa tu frase semilla..." required autocomplete="off">
+          <button type="button" class="toggle-visibility" id="toggle-seed" tabindex="-1" title="Mostrar/Ocultar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+        </div>
+
+        <button type="submit" class="btn-transform">Generar Contraseña</button>
+      </form>
+
+      <div class="result-container" id="result-container">
+        <div class="result-label">Resultado Transformado</div>
+        <div style="position: relative;">
+          <div class="result-box">
+            <span class="result-text" id="result-text"></span>
+            <button class="btn-copy" id="btn-copy" title="Copiar al portapapeles">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </button>
+          </div>
+          <div class="copy-success" id="copy-success">¡Copiado!</div>
+        </div>
+      </div>
+      
+      <div class="security-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        Procesamiento 100% Offline (Sin servidores)
+      </div>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-muted);">
+        <p>Código fuente de la PWA disponible y auditable en <a href="https://github.com/casbeep/password-transformer-pwa" target="_blank" rel="noopener noreferrer" style="color: var(--primary); text-decoration: none; font-weight: 600;">GitHub</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Visibility Toggles
+    function setupToggle(btnId, inputId) {
+      const btn = document.getElementById(btnId);
+      const input = document.getElementById(inputId);
+      
+      btn.addEventListener('click', () => {
+        if (input.type === 'password') {
+          input.type = 'text';
+          btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>`;
+        } else {
+          input.type = 'password';
+          btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>`;
+        }
+      });
+    }
+
+    setupToggle('toggle-pwd', 'password');
+    setupToggle('toggle-seed', 'seed');
+
+    // Transposition Algorithm
+    // Uses a standard Columnar Transposition layout. 
+    function transposePassword(password, seed) {
+      if (!password || !seed) return password;
+      
+      const key = seed.replace(/\\s+/g, '');
+      if (key.length === 0) return password;
+
+      const numCols = key.length;
+      let colsOrder = Array.from(key).map((char, index) => ({ char: char, index: index }));
+      
+      colsOrder.sort((a, b) => {
+          if (a.char === b.char) return a.index - b.index;
+          return a.char.localeCompare(b.char);
+      });
+
+      let result = "";
+      for (let i = 0; i < colsOrder.length; i++) {
+          let colIndex = colsOrder[i].index;
+          for (let j = colIndex; j < password.length; j += numCols) {
+              result += password[j];
+          }
+      }
+      return result;
+    }
+
+    // Form Handling
+    const form = document.getElementById('transform-form');
+    const resultContainer = document.getElementById('result-container');
+    const resultText = document.getElementById('result-text');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault(); 
+      
+      const pwd = document.getElementById('password').value;
+      const seed = document.getElementById('seed').value;
+      
+      const transformed = transposePassword(pwd, seed);
+      
+      resultText.textContent = transformed;
+      resultContainer.classList.add('active');
+    });
+
+    // Copy to clipboard
+    const btnCopy = document.getElementById('btn-copy');
+    const copySuccess = document.getElementById('copy-success');
+
+    btnCopy.addEventListener('click', () => {
+      const textToCopy = resultText.textContent;
+      if (!textToCopy) return;
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        copySuccess.classList.add('show');
+        setTimeout(() => {
+          copySuccess.classList.remove('show');
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    });
+
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(registration => {
+            console.log('SW setup successful, scope is:', registration.scope);
+          })
+          .catch(error => {
+            console.error('SW setup failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
